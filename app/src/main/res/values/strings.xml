@@ -3,4 +3,6 @@
     <string name="user_command">Your Command</string>
     <string name="partition_text">Assistant</string>
     <string name="assistant_response">Assistant Response</string>
+    <string name="permission_recordaudio_rationale">Record Audio permission is needed to get your command.</string>
+    <string name="ok">OK</string>
 </resources>
