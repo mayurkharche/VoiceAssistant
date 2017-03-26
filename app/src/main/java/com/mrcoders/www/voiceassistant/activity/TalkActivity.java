@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.google.gson.JsonElement;
 import com.mrcoders.www.voiceassistant.R;
+import com.mrcoders.www.voiceassistant.global.Constant;
 import com.mrcoders.www.voiceassistant.service.TalkService;
 
 import java.util.HashMap;
@@ -64,7 +65,7 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
         tts = new TextToSpeech(this, this);
         txtSpeechInput = (TextView) findViewById(R.id.tv_user_command);
 
-        final AIConfiguration config = new AIConfiguration("1fc7b93481824b7594f0b5455b523abc",
+        final AIConfiguration config = new AIConfiguration(Constant.clientAccessToken,
                 AIConfiguration.SupportedLanguages.English,
                 AIConfiguration.RecognitionEngine.System);
         aiService = AIService.getService(this, config);
