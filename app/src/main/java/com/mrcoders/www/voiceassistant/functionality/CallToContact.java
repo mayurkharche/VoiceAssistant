@@ -1,4 +1,4 @@
-package com.mrcoders.www.voiceassistant.activity.functionality;
+package com.mrcoders.www.voiceassistant.functionality;
 
 import android.Manifest;
 import android.content.ContentResolver;
