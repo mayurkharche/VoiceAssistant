@@ -13,11 +13,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.JsonElement;
 import com.mrcoders.www.voiceassistant.R;
+import com.mrcoders.www.voiceassistant.functionality.BatteryStatus;
+import com.mrcoders.www.voiceassistant.functionality.Bluetooth;
+import com.mrcoders.www.voiceassistant.functionality.Wifi;
 import com.mrcoders.www.voiceassistant.global.Constant;
 import com.mrcoders.www.voiceassistant.service.TalkService;
 
@@ -92,6 +95,9 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
         }catch(Exception e){
             Log.d(TAG,"Service is not running");
         }
+
+        BatteryStatus bs = new BatteryStatus(this);
+        Toast.makeText(this, ""+bs.batteryLevel(), Toast.LENGTH_SHORT).show();
     }
 
     private void requestRecordAudioPermission() {
@@ -166,15 +172,50 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
             }
         }
 
-        String query = result.getFulfillment().getSpeech();
+        String toSpeak = result.getFulfillment().getSpeech();
+        String action = result.getAction();
 
         // Show results in TextView.
         txtSpeechInput.setText("Query:" + result.getResolvedQuery() +
                 "\nAction: " + result.getAction() +
-                "\nParameters: " + query);
+                "\nParameters: " + toSpeak);
 
-        speakOut(query);
+        if(action.equals("service")){
+            Log.d(TAG,result.getParameters().get("Service").getAsString());
+            if(result.getParameters().get("Service").getAsString().equals("Bluetooth")){
+                Log.d(TAG,result.getParameters().get("Boolean").getAsString());
+                Bluetooth b = new Bluetooth();
+                if(result.getParameters().get("Boolean").getAsString().equals("on")){
+                    Log.d(TAG,"Bluetooth turned on");
+                    b.setBluetooth(true);
+                    speakOut("Bluetooth turned on");
+                }else if(result.getParameters().get("Boolean").getAsString().equals("off")){
+                    Log.d(TAG,"Bluetooth turn off");
+                    b.setBluetooth(false);
+                    speakOut("Bluetooth turned off");
+                }
+            }else if(result.getParameters().get("Service").getAsString().equals("Wi-Fi")){
+                /*Log.d(TAG,result.getParameters().get("Boolean").getAsString());
+                Wifi wifi = new Wifi(this);
+                if(result.getParameters().get("Boolean").getAsString().equals("on")){
+                    Log.d(TAG,"Wi-Fi turned on");
+                    wifi.change_wifi(true);
+                    speakOut("Wi-Fi turned on");
+                }else if(result.getParameters().get("Boolean").getAsString().equals("off")){
+                    Log.d(TAG,"Wi-Fi turn off");
+                    wifi.change_wifi(false);
+                    speakOut("Wi-Fi turned off");
+                }*/
+            }
 
+        }else if(action.equals("battery")){
+
+            BatteryStatus bs = new BatteryStatus(this);
+            speakOut("Your battery status is "+bs.batteryLevel());
+
+        }else{
+            speakOut(toSpeak);
+        }
     }
 
     private void speakOut(final String text) {
