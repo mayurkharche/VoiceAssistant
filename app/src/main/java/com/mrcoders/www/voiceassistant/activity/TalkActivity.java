@@ -20,6 +20,7 @@ import com.google.gson.JsonElement;
 import com.mrcoders.www.voiceassistant.R;
 import com.mrcoders.www.voiceassistant.functionality.BatteryStatus;
 import com.mrcoders.www.voiceassistant.functionality.Bluetooth;
+import com.mrcoders.www.voiceassistant.functionality.LaunchApp;
 import com.mrcoders.www.voiceassistant.functionality.Wifi;
 import com.mrcoders.www.voiceassistant.global.Constant;
 import com.mrcoders.www.voiceassistant.service.TalkService;
@@ -96,8 +97,8 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
             Log.d(TAG,"Service is not running");
         }
 
-        BatteryStatus bs = new BatteryStatus(this);
-        Toast.makeText(this, ""+bs.batteryLevel(), Toast.LENGTH_SHORT).show();
+        /*LaunchApp la = new LaunchApp(this);
+        la.launchApp("YouTube");*/
     }
 
     private void requestRecordAudioPermission() {
@@ -195,7 +196,7 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
                     speakOut("Bluetooth turned off");
                 }
             }else if(result.getParameters().get("Service").getAsString().equals("Wi-Fi")){
-                /*Log.d(TAG,result.getParameters().get("Boolean").getAsString());
+                Log.d(TAG,result.getParameters().get("Boolean").getAsString());
                 Wifi wifi = new Wifi(this);
                 if(result.getParameters().get("Boolean").getAsString().equals("on")){
                     Log.d(TAG,"Wi-Fi turned on");
@@ -205,7 +206,7 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
                     Log.d(TAG,"Wi-Fi turn off");
                     wifi.change_wifi(false);
                     speakOut("Wi-Fi turned off");
-                }*/
+                }
             }
 
         }else if(action.equals("battery")){
@@ -213,6 +214,15 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
             BatteryStatus bs = new BatteryStatus(this);
             speakOut("Your battery status is "+bs.batteryLevel());
 
+        }else if(action.equals("launch")){
+
+            String name = result.getParameters().get("app-name").getAsString();
+            LaunchApp la = new LaunchApp(this);
+            if(la.launchApp(name)){
+                finish();
+            }else{
+                speakOut("Sorry, cann't find "+name+" in your mobile");
+            }
         }else{
             speakOut(toSpeak);
         }
@@ -320,6 +330,5 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
         } else {
             Log.e(TAG+"TTS", "Initilization Failed!");
         }
-
     }
 }

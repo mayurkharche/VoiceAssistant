@@ -16,7 +16,7 @@ public class WeatherStatus extends AppCompatActivity{
 
     WeatherMap weatherMap;
 
-    private void weatherStatus(String city) {
+    public void weatherStatus(String city) {
         weatherMap.getCityWeather(city, new WeatherCallback() {
             @Override
             public void success(WeatherResponseModel weatherResponseModel) {
