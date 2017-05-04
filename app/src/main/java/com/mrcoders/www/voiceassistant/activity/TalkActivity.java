@@ -21,6 +21,7 @@ import com.mrcoders.www.voiceassistant.R;
 import com.mrcoders.www.voiceassistant.functionality.BatteryStatus;
 import com.mrcoders.www.voiceassistant.functionality.Bluetooth;
 import com.mrcoders.www.voiceassistant.functionality.LaunchApp;
+import com.mrcoders.www.voiceassistant.functionality.WeatherStatus;
 import com.mrcoders.www.voiceassistant.functionality.Wifi;
 import com.mrcoders.www.voiceassistant.global.Constant;
 import com.mrcoders.www.voiceassistant.service.TalkService;
@@ -35,6 +36,7 @@ import ai.api.android.AIService;
 import ai.api.model.AIError;
 import ai.api.model.AIResponse;
 import ai.api.model.Result;
+import github.vatsal.easyweather.WeatherMap;
 
 public class TalkActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback
                             ,AIListener,TextToSpeech.OnInitListener{
@@ -46,12 +48,14 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
     private View mLayout;
 
     private TextView txtSpeechInput;
+    private TextView txtSpeechOutput;
     private TextToSpeech tts;
     private AIService aiService;
     private Intent serviceIntent;
     private HashMap<String,String> ttsParams;
     private AudioManager audioManager;
     private int currentVolume;
+    private WeatherMap weatherMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +72,7 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
 
         tts = new TextToSpeech(this, this);
         txtSpeechInput = (TextView) findViewById(R.id.tv_user_command);
+        txtSpeechOutput = (TextView) findViewById(R.id.tv_assistant_response);
 
         final AIConfiguration config = new AIConfiguration(Constant.clientAccessToken,
                 AIConfiguration.SupportedLanguages.English,
@@ -97,8 +102,7 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
             Log.d(TAG,"Service is not running");
         }
 
-        /*LaunchApp la = new LaunchApp(this);
-        la.launchApp("YouTube");*/
+        weatherMap =  new WeatherMap(this, "efa265f590cc47001d75c2eda991a174");
     }
 
     private void requestRecordAudioPermission() {
@@ -223,12 +227,19 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
             }else{
                 speakOut("Sorry, cann't find "+name+" in your mobile");
             }
+        }else if(action.equals("weather")){
+
+            Log.d("weather","weather called");
+            String name = result.getParameters().get("city-name").getAsString();
+            WeatherStatus w = new WeatherStatus(weatherMap, this);
+            w.weatherStatus(name);
+
         }else{
             speakOut(toSpeak);
         }
     }
 
-    private void speakOut(final String text) {
+    public void speakOut(final String text) {
 
 
         //aiService.stopListening();
@@ -330,5 +341,10 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
         } else {
             Log.e(TAG+"TTS", "Initilization Failed!");
         }
+    }
+
+    public void updateResponse(String textToUpdate){
+
+        txtSpeechOutput.setText(textToUpdate);
     }
 }

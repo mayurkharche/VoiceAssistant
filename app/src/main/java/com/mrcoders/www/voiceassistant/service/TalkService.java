@@ -34,7 +34,7 @@ public class TalkService extends Service implements RecognitionListener {
     private static final String KWS_SEARCH = "wakeup";
 
     /* Keyword we are looking for to activate menu */
-    private static final String KEYPHRASE = "start voice";
+    private static final String KEYPHRASE = "start voice assistant";
 
     private SpeechRecognizer recognizer;
 
