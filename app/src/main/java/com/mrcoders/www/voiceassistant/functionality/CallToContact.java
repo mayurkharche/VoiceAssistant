@@ -2,6 +2,7 @@ package com.mrcoders.www.voiceassistant.functionality;
 
 import android.Manifest;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -29,22 +30,16 @@ public class CallToContact extends AppCompatActivity{
     private String mSelectionClause = ContactsContract.Contacts.DISPLAY_NAME_PRIMARY + "  = ?";
     private String[] mSelectionArguments = new String[]{"Rohit"};
 
-    private void showContacts() {
+    public void showContacts() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         } else {
             // Android version is lesser than 6.0 or the permission is already granted.
             String contact = getContactPhone();
-            Toast.makeText(this,contact,Toast.LENGTH_LONG).show();
 
             Intent callIntent = new Intent(Intent.ACTION_CALL);
             callIntent.setData(Uri.parse("tel:"+contact));
-
-            if (ActivityCompat.checkSelfPermission(CallToContact.this,
-                    Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                return;
-            }
             startActivity(callIntent);
         }
     }
@@ -57,7 +52,7 @@ public class CallToContact extends AppCompatActivity{
                 // Permission is granted
                 showContacts();
             } else {
-                Toast.makeText(this, "Until you grant the permission, we canot display the names", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Until you grant the permission, we cannot display the names", Toast.LENGTH_SHORT).show();
             }
         }
     }

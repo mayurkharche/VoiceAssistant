@@ -1,10 +1,15 @@
 package com.mrcoders.www.voiceassistant.activity;
 
 import android.Manifest;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.provider.ContactsContract;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -20,13 +25,17 @@ import com.google.gson.JsonElement;
 import com.mrcoders.www.voiceassistant.R;
 import com.mrcoders.www.voiceassistant.functionality.BatteryStatus;
 import com.mrcoders.www.voiceassistant.functionality.Bluetooth;
+import com.mrcoders.www.voiceassistant.functionality.CallToContact;
 import com.mrcoders.www.voiceassistant.functionality.LaunchApp;
 import com.mrcoders.www.voiceassistant.functionality.WeatherStatus;
 import com.mrcoders.www.voiceassistant.functionality.Wifi;
 import com.mrcoders.www.voiceassistant.global.Constant;
 import com.mrcoders.www.voiceassistant.service.TalkService;
+import com.skyfishjy.library.RippleBackground;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -45,6 +54,11 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
 
     private static final int REQUEST_RECORD_AUDIO = 1;
 
+    private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
+    private String[] mColumnProjection = new String[]{
+            ContactsContract.Contacts.DISPLAY_NAME_PRIMARY
+    };
+
     private View mLayout;
 
     private TextView txtSpeechInput;
@@ -56,6 +70,7 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
     private AudioManager audioManager;
     private int currentVolume;
     private WeatherMap weatherMap;
+    String namee = "Rohit Gurjar";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +118,140 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
         }
 
         weatherMap =  new WeatherMap(this, "efa265f590cc47001d75c2eda991a174");
+
+        final RippleBackground rippleBackground=(RippleBackground)findViewById(R.id.content);
+        rippleBackground.startRippleAnimation();
+
+      //  showContacts();
+        getAllContacts(namee);
+      //  arr  = getNameEmailDetails();
+      //  Toast.makeText(this,arr.toString(),Toast.LENGTH_LONG).show();
+    }
+
+   /* private void showContacts() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
+            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
+        } else {
+            // Android version is lesser than 6.0 or the permission is already granted.
+            String contact = getContactPhone();
+            Toast.makeText(this,contact,Toast.LENGTH_LONG).show();
+
+            Intent callIntent = new Intent(Intent.ACTION_CALL);
+            callIntent.setData(Uri.parse("tel:"+contact));
+
+            if (ActivityCompat.checkSelfPermission(TalkActivity.this,
+                    Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            startActivity(callIntent);
+        }
+    }
+
+    private String getContactPhone() {
+        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+        String mSelectionClause = ContactsContract.Contacts.DISPLAY_NAME_PRIMARY + "  = ?";
+        String[] mSelectionArguments = new String[]{namee};
+
+        List<String> contacts_list = new ArrayList<>();
+        ContentResolver cr = getContentResolver();
+        Cursor cursor = cr.query(uri, null,mSelectionClause,mSelectionArguments, null);
+
+        if (cursor.moveToFirst()) {
+            String phone = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+            if (phone == null) {
+                cursor.close();
+                return null;
+            }
+            else
+                return phone;
+        }
+        cursor.close();
+        return null;
+    }*/
+
+    public void getAllContacts(String namee) {
+
+        ContentResolver cr = getContentResolver();
+        String mSelectionClause = ContactsContract.Contacts.DISPLAY_NAME_PRIMARY + "  = ?";
+        String[] mSelectionArguments = new String[]{namee};
+
+        ArrayList<String> names = new ArrayList<String>();
+        ArrayList<String> phone = new ArrayList<String>();
+        Cursor phones = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,mSelectionClause,mSelectionArguments, null);
+
+        while (phones.moveToNext())
+        {
+            String name=phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+            String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+            names.add(name);
+            phone.add(phoneNumber);
+            break;
+        }
+        phones.close();
+        Intent callIntent = new Intent(Intent.ACTION_CALL);
+        callIntent.setData(Uri.parse("tel:"+phone.get(0)));
+        if (ActivityCompat.checkSelfPermission(TalkActivity.this,
+                Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        startActivity(callIntent);
+
+        Toast.makeText(this,phone.get(0).toString(),Toast.LENGTH_LONG).show();
+    }
+
+    public ArrayList<String> getNameEmailDetails(){
+
+        ArrayList<String> names = new ArrayList<String>();
+        ContentResolver cr = getContentResolver();
+        String mSelectionClause = ContactsContract.Contacts.DISPLAY_NAME_PRIMARY + "  = ?";
+        String[] mSelectionArguments = new String[]{"Rohit Gurjar"};
+        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,null,mSelectionClause, mSelectionArguments,null);
+
+        if (cur.getCount() > 0) {
+            while (cur.moveToNext()) {
+             //   String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+                //  String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+            //    String email = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
+             //
+                String phone=null;
+
+                if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+                    //Query phone here.  Covered next
+                    phone = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                }
+                names.add(phone);
+            }
+            return names;
+        }
+        else
+            return null;
+
+       /* if (cur.getCount() > 0) {
+            while (cur.moveToNext()) {
+                
+                String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+                Cursor cur1 = cr.query(ContactsContract.CommonDataKinds.Email.CONTENT_URI, null,
+                        ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
+                        new String[]{id}, null);
+
+                while (cur.moveToNext()) {
+                    //to get the contact names
+                    String phone = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    Log.e("Phone : ",phone);
+                    String name=cur1.getString(cur1.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                    Log.e("Name :", name);
+                    String email = cur1.getString(cur1.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
+                    Log.e("Email", email);
+                    if(email!=null){
+                        names.add(name);
+                    }
+                }
+                cur1.close();
+            }
+        }*/
+
     }
 
     private void requestRecordAudioPermission() {
@@ -140,6 +289,15 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(requestCode == REQUEST_RECORD_AUDIO && grantResults[0] == PackageManager.PERMISSION_GRANTED){
             aiService.startListening();
+        }
+
+        if (requestCode == PERMISSIONS_REQUEST_READ_CONTACTS) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission is granted
+               // showContacts();
+            } else {
+                Toast.makeText(this, "Until you grant the permission, we canot display the names", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

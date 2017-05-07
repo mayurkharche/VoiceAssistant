@@ -32,4 +32,5 @@ dependencies {
     compile 'com.google.code.gson:gson:2.3'
     testCompile 'junit:junit:4.12'
     compile files('libs/pocketsphinx-android-5prealpha-nolib.jar')
+    compile 'com.skyfishjy.ripplebackground:library:1.0.1'
 }
