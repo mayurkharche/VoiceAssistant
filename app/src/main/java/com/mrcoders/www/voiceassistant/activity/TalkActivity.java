@@ -16,6 +16,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -121,54 +122,7 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
 
         final RippleBackground rippleBackground=(RippleBackground)findViewById(R.id.content);
         rippleBackground.startRippleAnimation();
-
-      //  showContacts();
-        getAllContacts(namee);
-      //  arr  = getNameEmailDetails();
-      //  Toast.makeText(this,arr.toString(),Toast.LENGTH_LONG).show();
     }
-
-   /* private void showContacts() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
-            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
-        } else {
-            // Android version is lesser than 6.0 or the permission is already granted.
-            String contact = getContactPhone();
-            Toast.makeText(this,contact,Toast.LENGTH_LONG).show();
-
-            Intent callIntent = new Intent(Intent.ACTION_CALL);
-            callIntent.setData(Uri.parse("tel:"+contact));
-
-            if (ActivityCompat.checkSelfPermission(TalkActivity.this,
-                    Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                return;
-            }
-            startActivity(callIntent);
-        }
-    }
-
-    private String getContactPhone() {
-        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-        String mSelectionClause = ContactsContract.Contacts.DISPLAY_NAME_PRIMARY + "  = ?";
-        String[] mSelectionArguments = new String[]{namee};
-
-        List<String> contacts_list = new ArrayList<>();
-        ContentResolver cr = getContentResolver();
-        Cursor cursor = cr.query(uri, null,mSelectionClause,mSelectionArguments, null);
-
-        if (cursor.moveToFirst()) {
-            String phone = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-            if (phone == null) {
-                cursor.close();
-                return null;
-            }
-            else
-                return phone;
-        }
-        cursor.close();
-        return null;
-    }*/
 
     public void getAllContacts(String namee) {
 
@@ -201,6 +155,52 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
         Toast.makeText(this,phone.get(0).toString(),Toast.LENGTH_LONG).show();
     }
 
+    public String getphone(String namee){
+
+        ContentResolver cr = getContentResolver();
+
+        ArrayList<String> names = new ArrayList<String>();
+        ArrayList<String> phone = new ArrayList<String>();
+        Cursor phones = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,null,null, null);
+
+        phones.moveToFirst();
+
+        do
+        {
+            String name=phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+            String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+            names.add(name);
+            phone.add(phoneNumber);
+
+        }while (phones.moveToNext());
+
+        int j = -1;
+        String ph="";
+        for(int i = 0 ;i < names.size() ; i++){
+
+            if(namee.toLowerCase().equals(names.get(i).toLowerCase())){
+
+                  ph = phone.get(i);
+                  break;
+            }
+        }
+
+        return ph;
+    }
+
+    public void makeACall(String number){
+
+        Intent callIntent = new Intent(Intent.ACTION_CALL);
+        callIntent.setData(Uri.parse("tel:"+number));
+        if (ActivityCompat.checkSelfPermission(TalkActivity.this,
+                Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        startActivity(callIntent);
+        finish();
+    }
+
     public ArrayList<String> getNameEmailDetails(){
 
         ArrayList<String> names = new ArrayList<String>();
@@ -227,31 +227,6 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
         }
         else
             return null;
-
-       /* if (cur.getCount() > 0) {
-            while (cur.moveToNext()) {
-                
-                String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
-                Cursor cur1 = cr.query(ContactsContract.CommonDataKinds.Email.CONTENT_URI, null,
-                        ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
-                        new String[]{id}, null);
-
-                while (cur.moveToNext()) {
-                    //to get the contact names
-                    String phone = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    Log.e("Phone : ",phone);
-                    String name=cur1.getString(cur1.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                    Log.e("Name :", name);
-                    String email = cur1.getString(cur1.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
-                    Log.e("Email", email);
-                    if(email!=null){
-                        names.add(name);
-                    }
-                }
-                cur1.close();
-            }
-        }*/
-
     }
 
     private void requestRecordAudioPermission() {
@@ -339,9 +314,8 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
         String action = result.getAction();
 
         // Show results in TextView.
-        txtSpeechInput.setText("Query:" + result.getResolvedQuery() +
-                "\nAction: " + result.getAction() +
-                "\nParameters: " + toSpeak);
+        txtSpeechInput.setText(result.getResolvedQuery());
+        txtSpeechOutput.setText(toSpeak);
 
         if(action.equals("service")){
             Log.d(TAG,result.getParameters().get("Service").getAsString());
@@ -374,7 +348,7 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
         }else if(action.equals("battery")){
 
             BatteryStatus bs = new BatteryStatus(this);
-            speakOut("Your battery status is "+bs.batteryLevel());
+            speakOut("Your battery status is "+bs.batteryLevel()+" percent");
 
         }else if(action.equals("launch")){
 
@@ -392,9 +366,82 @@ public class TalkActivity extends AppCompatActivity implements ActivityCompat.On
             WeatherStatus w = new WeatherStatus(weatherMap, this);
             w.weatherStatus(name);
 
+        }else if(action.equals("textservice")){
+
+            Log.d("textservice","Text Service Called");
+
+            String name="",op="",content="";
+            try {
+                name = result.getParameters().get("name").getAsString();
+                op = result.getParameters().get("text_service").getAsString();
+                content = result.getParameters().get("content").getAsString();
+            }catch(Exception e){
+
+            }
+
+            Log.d("textService","option "+op+ "name" +name+ "content" + content);
+
+            if(name.equals("") || op.equals("") || content.equals("")){
+
+                speakOut(toSpeak);
+
+            }else{
+
+                if(op.equals("Email")){
+
+                    Log.d("textService","In Email");
+                    final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+                    emailIntent.setType("plain/text");
+                    emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"mayurkharche1994@gmail.com"});
+                    emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "An email through voice assistance");
+                    emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, content);
+                    startActivity(Intent.createChooser(emailIntent, "Send mail..."));
+
+                }else{
+
+                    Log.d("textService","In Message");
+
+                    try {
+                        sendSMS(getphone(name), content);
+                    }catch(Exception e){
+                        speakOut("Something is going wrong,Can not send the message");
+                    }
+                }
+            }
+
+        }else if(action.equals("call")){
+
+            Log.d("call","Calling called");
+            String name = result.getParameters().get("name").getAsString();
+
+            makeACall(getphone(name));
+
+        }else if(action.equals("smalltalk.greetings.bye")){
+
+            finish();
+
+        }else if(action.equals("search")){
+
+            Log.d("search","search called");
+            String keyword = result.getParameters().get("any").getAsString();
+            searchKeyword(keyword);
+
         }else{
             speakOut(toSpeak);
         }
+    }
+
+    private void searchKeyword(String keyword){
+
+        Uri uri = Uri.parse("http://www.google.com/#q="+keyword);
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
+        finish();
+    }
+
+    private void sendSMS(String phoneNumber, String message) {
+        SmsManager sms = SmsManager.getDefault();
+        sms.sendTextMessage(phoneNumber, null, message, null, null);
     }
 
     public void speakOut(final String text) {
